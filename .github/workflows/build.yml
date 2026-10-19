@@ -1,0 +1,283 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Proje dosyalarini olustur
+        run: |
+          mkdir -p app/src/main/assets
+          cat > app/src/main/assets/index.html <<'EOF_FILE'
+          <!DOCTYPE html>
+          <html lang="tr">
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+          <title>TV Launcher</title>
+          <style>
+          :root{--acc:#e50914;--bg:#07070b;--fg:#fff;--mut:#8a8a94;color-scheme:dark}
+          *{box-sizing:border-box;margin:0}
+          html,body{height:100%;background:#050508;overflow:hidden;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--fg)}
+          #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+          #stage{width:1920px;height:1080px;position:relative;flex:none;transform-origin:center center;background:var(--bg);overflow:hidden}
+          #glow{position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 85% 10%,var(--acc) 0%,transparent 65%);opacity:.55;transition:.5s}
+          #glow2{position:absolute;inset:0;background:repeating-linear-gradient(172deg,transparent 0 14px,rgba(255,255,255,.035) 14px 15px);mask-image:linear-gradient(90deg,transparent 40%,#000);-webkit-mask-image:linear-gradient(90deg,transparent 40%,#000)}
+          #wm{position:absolute;left:1420px;top:205px;width:190px;height:358px;font-size:520px;line-height:358px;font-weight:900;color:rgba(255,255,255,.12);text-align:center;letter-spacing:-10px;overflow:hidden}
+          .pill{position:absolute;top:60px;height:64px;border-radius:32px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);display:flex;align-items:center;padding:0 28px;gap:16px;font-size:24px;color:#d8d8de;backdrop-filter:blur(8px)}
+          #clock{left:96px}#clock b{font-size:42px;color:#fff;font-weight:700}
+          #clock i{width:1px;height:28px;background:rgba(255,255,255,.2);display:block}
+          #cast{left:1095px;padding:0 26px}
+          .dot{width:12px;height:12px;border-radius:50%;background:#2de0a5;box-shadow:0 0 10px #2de0a5}
+          #ram{left:1365px;width:458px;border-color:rgba(229,9,20,.5);background:rgba(229,9,20,.15);padding:0 8px 0 28px}
+          #bar{width:110px;height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden}
+          #bar span{display:block;height:100%;background:#f5b400;border-radius:4px;transition:.6s}
+          #clean{margin-left:auto;border:0;height:46px;padding:0 20px;border-radius:23px;background:rgba(245,180,0,.2);color:#f5b400;font:700 22px inherit;font-family:inherit;cursor:pointer}
+          #greet{position:absolute;left:96px;top:214px;font-size:28px;color:#cfcfd6;display:flex;align-items:center;gap:14px}
+          #greet:before{content:"";width:40px;height:4px;background:var(--acc);border-radius:2px}
+          #title{position:absolute;left:96px;top:250px;font-size:170px;font-weight:900;letter-spacing:-9px;line-height:170px;background:linear-gradient(#fff 30%,#a9a9b2);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+          #sub{position:absolute;left:96px;top:426px;font-size:34px;color:#cfcfd6}
+          .btn{position:absolute;top:504px;height:68px;border-radius:34px;display:flex;align-items:center;gap:14px;font-size:27px;font-weight:600;cursor:pointer}
+          #open{left:96px;width:174px;background:#fff;color:#111;padding:0 14px}
+          #open em{font-style:normal;background:#111;color:#fff;font-size:15px;font-weight:800;width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+          #info{left:288px;width:285px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);justify-content:center;color:#e6e6ea}
+          .sec{position:absolute;left:96px;font-size:25px;font-weight:600;color:#85858f}
+          .sec small{font-size:20px;margin-left:8px}
+          #apps{position:absolute;left:96px;top:727px;display:flex;gap:30px}
+          .tile{width:246px;height:150px;border-radius:26px;position:relative;padding:20px;display:flex;align-items:flex-end;font-size:26px;font-weight:700;color:rgba(255,255,255,.88);cursor:pointer;transition:.2s;opacity:.92;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+          .tile svg{position:absolute;right:22px;top:20px;width:56px;height:56px}
+          .tile.sel{transform:scale(1.04);opacity:1;color:#fff;outline:5px solid #fff;outline-offset:5px;box-shadow:0 0 60px var(--acc)}
+          #hint{position:absolute;left:96px;top:908px;font-size:22px;color:var(--mut);display:flex;gap:10px;align-items:center}
+          #hint b{color:#ffb4b8}
+          kbd{font:800 14px inherit;font-family:inherit;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:3px 7px;background:rgba(255,255,255,.1);color:#ddd}
+          #inputs{position:absolute;left:96px;top:958px;display:flex;gap:16px;align-items:center}
+          #inputs>span{font-size:25px;font-weight:600;color:#85858f;margin-right:12px}
+          .inp{height:58px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);display:flex;align-items:center;gap:14px;padding:0 20px 0 18px;font-size:25px;font-weight:600;cursor:pointer}
+          .inp i{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.1);display:grid;place-items:center;font-style:normal;font-size:16px}
+          .inp:hover{background:rgba(255,255,255,.12)}
+          #keys{position:absolute;right:96px;top:972px;display:flex;gap:16px;align-items:center;color:var(--mut);font-size:22px}
+          #toast{position:absolute;left:50%;top:620px;transform:translateX(-50%);background:#fff;color:#111;padding:14px 30px;border-radius:30px;font-size:28px;font-weight:700;opacity:0;transition:.3s;pointer-events:none}
+          #toast.on{opacity:1}
+          </style>
+          </head>
+          <body>
+          <div id="wrap"><div id="stage">
+          <div id="glow"></div><div id="glow2"></div><div id="wm">N</div>
+
+          <div class="pill" id="clock"><b id="t">21:40</b><span id="d">Paz 19 Eki</span><i></i>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#cfcfd6" stroke-width="2"><path d="M7 18a4 4 0 010-8 5 5 0 019.6-1A4.5 4.5 0 0117 18z"/></svg><span>14° · İstanbul</span></div>
+          <div class="pill" id="cast"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e6e6ea" stroke-width="2"><path d="M3 8V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2h-6M3 12a8 8 0 018 8M3 16a4 4 0 014 4M3 20h.01"/></svg><span style="color:#fff">iPhone</span><span>· hazır</span><span class="dot"></span></div>
+          <div class="pill" id="ram"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f0f0f4" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg><span style="color:#fff">RAM</span><span id="rp">%64</span><div id="bar"><span id="rb" style="width:64%"></span></div><button id="clean">⚡ Boşalt</button></div>
+
+          <div id="greet">İyi akşamlar</div>
+          <div id="title">Netflix</div>
+          <div id="sub">Kaldığın yerden devam et</div>
+          <div class="btn" id="open"><em>OK</em>ile aç</div>
+          <div class="btn" id="info"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Uygulama bilgisi</div>
+
+          <div class="sec" style="top:675px">Uygulamalar <small>6</small></div>
+          <div id="apps"></div>
+          <div id="hint"><b id="hn">Netflix</b> · <kbd>OK</kbd> ile aç</div>
+
+          <div id="inputs"><span>Kısayollar</span>
+          <div class="inp" onclick="sc('wifi')"><i>◠</i>Wi-Fi</div><div class="inp" onclick="sc('bt')"><i>ᛒ</i>Bluetooth</div><div class="inp" onclick="sc('display')"><i>▭</i>Ekran</div><div class="inp" onclick="sc('all')"><i>⚙</i>Tüm ayarlar</div></div>
+          <div id="keys"><kbd>◀ ▶ ▲ ▼</kbd>gez <kbd>OK</kbd>aç</div>
+          <div id="toast"></div>
+          </div></div>
+
+          <script>
+          const ic={
+          n:'<text x="14" y="50" font-size="62" font-weight="900" fill="#fff" font-family="Impact,Arial Narrow,sans-serif">N</text>',
+          y:'<rect x="2" y="12" width="52" height="36" rx="12" fill="#fff"/><path d="M23 21l16 9-16 9z" fill="#b3261e"/>',
+          g:'<rect x="4" y="8" width="48" height="34" rx="6" fill="none" stroke="#fff" stroke-width="4"/><path d="M23 17l14 8-14 8z" fill="#fff"/><path d="M18 50h20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
+          s:'<circle cx="28" cy="28" r="26" fill="#fff"/><g fill="none" stroke="#1d8a4a" stroke-width="4" stroke-linecap="round"><path d="M14 20q15-5 30 3"/><path d="M16 29q12-4 24 3"/><path d="M18 37q9-3 18 2"/></g>',
+          p:'<path d="M12 6l38 22-38 22z" fill="#fff" fill-opacity=".85"/>',
+          a:'<g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><circle cx="28" cy="28" r="9"/><circle cx="28" cy="28" r="17"/><path d="M28 3v6M28 47v6M3 28h6M47 28h6M10 10l4 4M42 42l4 4M10 46l4-4M42 14l4-4"/></g>'};
+          const apps=[
+          {n:'Netflix',l:'N',a:'#e50914',c:['#ff4d5a','#a00008'],s:'Kaldığın yerden devam et',i:'n'},
+          {n:'YouTube',l:'▶',a:'#ff2a2a',c:['#d65a52','#8f1e17'],s:'Önerilen videoları keşfet',i:'y'},
+          {n:'Google TV',l:'G',a:'#2f7be5',c:['#4a8ee0','#1b4aa5'],s:'Senin için öneriler',i:'g'},
+          {n:'Spotify',l:'S',a:'#1db954',c:['#4cc57e','#12683a'],s:'Müziğine geri dön',i:'s'},
+          {n:'Play Store',l:'▶',a:'#e0a020',c:['#e0c060','#b07418'],s:'Uygulama ve oyun keşfet',i:'p'},
+          {n:'Ayarlar',l:'⚙',a:'#7a7f90',c:['#8b909e','#3a3d48'],s:'Cihaz ayarlarını yönet',i:'a'}];
+          const $=id=>document.getElementById(id);
+          const box=$('apps');let cur=0,tt;
+          apps.forEach((a,k)=>{const d=document.createElement('div');d.className='tile';d.style.background=`linear-gradient(150deg,${a.c[0]},${a.c[1]})`;
+          d.innerHTML=`<svg viewBox="0 0 56 56">${a.i==='n'?'<text x="14" y="50" font-size="62" font-weight="900" fill="#fff" font-family="Impact,Arial Narrow,sans-serif">N</text>':ic[a.i]}</svg>${a.n}`;
+          d.onclick=()=>{k===cur?open():sel(k)};box.appendChild(d)});
+          function sel(k){cur=(k+apps.length)%apps.length;const a=apps[cur];
+          [...box.children].forEach((e,j)=>e.classList.toggle('sel',j===cur));
+          $('title').textContent=a.n;$('sub').textContent=a.s;$('hn').textContent=a.n;$('wm').textContent=a.l;
+          document.documentElement.style.setProperty('--acc',a.a)}
+          const pk={'Netflix':'com.netflix.ninja','YouTube':'com.google.android.youtube.tv','Google TV':'com.google.android.apps.tv.launcherx','Spotify':'com.spotify.tv.android','Play Store':'com.android.vending','Ayarlar':'settings'};
+          function say(m,ms){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),ms||1400)}
+          function open(){const n=apps[cur].n;if(window.Android){say(Android.launch(pk[n])?n+' açılıyor…':n+' yüklü değil')}else say(n+' açılıyor…')}
+          function sc(k){window.Android?Android.settings(k):say('Sadece TV uygulamasında çalışır')}
+          $('open').onclick=open;
+          $('info').onclick=()=>{const t=$('toast');t.textContent=apps[cur].n+' · '+apps[cur].s;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1800)};
+          let row=0,si=0;const ss=[...document.querySelectorAll('.inp')];
+          function srow(){ss.forEach((e,j)=>e.style.outline=(row&&j===si)?'3px solid #fff':'none');[...box.children].forEach((e,j)=>e.classList.toggle('sel',!row&&j===cur))}
+          document.addEventListener('keydown',e=>{const k=e.key;
+          if(k==='ArrowDown'){row=1;srow()}else if(k==='ArrowUp'){row=0;srow()}
+          else if(k==='ArrowRight'){row?(si=(si+1)%ss.length,srow()):sel(cur+1)}
+          else if(k==='ArrowLeft'){row?(si=(si+ss.length-1)%ss.length,srow()):sel(cur-1)}
+          else if(k==='Enter'){row?ss[si].click():open()}});
+          function setRam(v){$('rp').textContent='%'+v;$('rb').style.width=v+'%'}
+          $('clean').onclick=()=>{setRam(window.Android?Android.clean():28+Math.floor(Math.random()*12))};
+          if(window.Android){setRam(Android.ram());setInterval(()=>setRam(Android.ram()),15000)}
+          function tick(){const n=new Date(),p=x=>String(x).padStart(2,'0');$('t').textContent=p(n.getHours())+':'+p(n.getMinutes());
+          const g=n.getHours();$('greet').textContent=g<6?'İyi geceler':g<12?'Günaydın':g<18?'İyi günler':'İyi akşamlar';
+          const dn=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'],mn=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+          $('d').textContent=dn[n.getDay()]+' '+n.getDate()+' '+mn[n.getMonth()]}
+          function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);$('stage').style.transform='scale('+s+')'}
+          addEventListener('resize',fit);fit();tick();setInterval(tick,20000);sel(0);
+          </script>
+          </body>
+          </html>
+          EOF_FILE
+          mkdir -p .
+          cat > settings.gradle.kts <<'EOF_FILE'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositories { google(); mavenCentral() } }
+          rootProject.name = "TvLauncher"
+          include(":app")
+          EOF_FILE
+          mkdir -p .
+          cat > build.gradle.kts <<'EOF_FILE'
+          plugins {
+              id("com.android.application") version "8.5.2" apply false
+              id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+          }
+          EOF_FILE
+          mkdir -p .
+          cat > gradle.properties <<'EOF_FILE'
+          org.gradle.jvmargs=-Xmx2g
+          android.useAndroidX=true
+          EOF_FILE
+          mkdir -p app
+          cat > app/build.gradle.kts <<'EOF_FILE'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+          android {
+              namespace = "com.example.tvlauncher"
+              compileSdk = 34
+              defaultConfig {
+                  applicationId = "com.example.tvlauncher"
+                  minSdk = 21
+                  targetSdk = 34
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions { jvmTarget = "17" }
+          }
+          EOF_FILE
+          mkdir -p app/src/main
+          cat > app/src/main/AndroidManifest.xml <<'EOF_FILE'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-feature android:name="android.software.leanback" android:required="false"/>
+              <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+              <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
+              <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+              <queries>
+                  <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent>
+                  <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent>
+              </queries>
+              <application android:label="TV Launcher" android:icon="@drawable/banner" android:banner="@drawable/banner"
+                  android:theme="@android:style/Theme.Material.NoActionBar">
+                  <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
+                      android:screenOrientation="landscape">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+                          <category android:name="android.intent.category.DEFAULT"/>
+                      </intent-filter>
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.HOME"/>
+                          <category android:name="android.intent.category.DEFAULT"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF_FILE
+          mkdir -p app/src/main/res/drawable
+          cat > app/src/main/res/drawable/banner.xml <<'EOF_FILE'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <gradient android:startColor="#FF4D5A" android:endColor="#A00008" android:angle="315"/>
+              <corners android:radius="24dp"/>
+          </shape>
+          EOF_FILE
+          mkdir -p app/src/main/java/com/example/tvlauncher
+          cat > app/src/main/java/com/example/tvlauncher/MainActivity.kt <<'EOF_FILE'
+          package com.example.tvlauncher
+
+          import android.app.Activity
+          import android.app.ActivityManager
+          import android.content.Context
+          import android.content.Intent
+          import android.os.Bundle
+          import android.provider.Settings
+          import android.view.View
+          import android.webkit.JavascriptInterface
+          import android.webkit.WebView
+
+          class MainActivity : Activity() {
+              private lateinit var web: WebView
+
+              override fun onCreate(b: Bundle?) {
+                  super.onCreate(b)
+                  web = WebView(this)
+                  web.settings.javaScriptEnabled = true
+                  web.settings.domStorageEnabled = true
+                  web.setBackgroundColor(0xFF07070B.toInt())
+                  web.addJavascriptInterface(Bridge(), "Android")
+                  web.loadUrl("file:///android_asset/index.html")
+                  setContentView(web)
+                  web.requestFocus()
+              }
+
+              override fun onResume() {
+                  super.onResume()
+                  window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+                      View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+              }
+
+              override fun onBackPressed() {}
+
+              private fun go(i: Intent) {
+                  runOnUiThread {
+                      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                      try { startActivity(i) } catch (e: Exception) {}
+                  }
+              }
+
+              inner class Bridge {
+                  @JavascriptInterface
+                  fun launch(pkg: String): Boolean {
+                      if (pkg == "settings") { go(Intent(Settings.ACTION_SETTINGS)); return true }
+                      val i = packageManager.getLeanbackLaunchIntentForPackage(pkg)
+                          ?: packageManager.getLaunchIntentForPackage(pkg)
+                          ?: return false
+                      go(i)
+                      return true
+                  }
+
+                  @JavascriptInterface
+                  fun settings(k: String) {
+                      val a = when (k) {
+                          "wifi" -> Settings.ACTION_WIFI_SETTINGS
+                          "bt" -> Settings.ACTION_BLUETOOTH_SETTINGS
+                          "display" -> Settings.ACTION_DISPLAY_SETTINGS
+ 
